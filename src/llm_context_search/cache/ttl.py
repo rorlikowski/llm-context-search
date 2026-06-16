@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Generic, Hashable, TypeVar
+from collections.abc import Hashable
+from typing import Generic, TypeVar
 
 _KT = TypeVar("_KT", bound=Hashable)
 _VT = TypeVar("_VT")

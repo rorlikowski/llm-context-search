@@ -28,7 +28,7 @@ def _chunk_text(text: str, *, target_chars: int, max_chars: int, overlap_chars: 
     paragraphs = _split_paragraphs(text)
     chunks: list[str] = []
     # pending_overlap carries trimmed tail text from the previous chunk to
-    # prepend to the start of the next real chunk — it is NEVER emitted alone.
+    # prepend to the start of the next real chunk - it is NEVER emitted alone.
     pending_overlap: str = ""
     current: list[str] = []
     current_len = 0

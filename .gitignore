@@ -18,6 +18,9 @@ build/
 *.egg
 MANIFEST
 
+# MkDocs
+site/
+
 # Package managers
 .uv/
 uv.lock

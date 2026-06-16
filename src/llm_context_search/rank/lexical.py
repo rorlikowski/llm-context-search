@@ -29,12 +29,7 @@ def _score_passage(query: str, passage: Passage, source: SourceDocument) -> Pass
     title_score = 1.0 if contains_any(source.title, query_terms) else 0.0
     snippet_score = 1.0 if source.snippet and contains_any(source.snippet, query_terms) else 0.0
 
-    lexical_score = (
-        0.50 * coverage
-        + 0.20 * frequency_score
-        + 0.15 * title_score
-        + 0.15 * snippet_score
-    )
+    lexical_score = 0.50 * coverage + 0.20 * frequency_score + 0.15 * title_score + 0.15 * snippet_score
 
     final_score = 0.75 * lexical_score + 0.25 * source.quality_score
 

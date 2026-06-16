@@ -31,11 +31,7 @@ def _render_markdown(passages: list[Passage]) -> str:
         source_passages = by_source[url]
         first = source_passages[0]
 
-        header = (
-            f"# Source {source_idx}: {first.source_title}\n"
-            f"URL: {url}\n"
-            f"Score: {first.source_quality_score:.2f}"
-        )
+        header = f"# Source {source_idx}: {first.source_title}\nURL: {url}\nScore: {first.source_quality_score:.2f}"
         passage_blocks = []
         for p_idx, passage in enumerate(source_passages, start=1):
             passage_blocks.append(f"## Passage {p_idx}\n{passage.text}")
@@ -61,7 +57,7 @@ class MarkdownPacker:
             if len(selected) >= max_passages:
                 break
             fits = total_tokens + passage.token_estimate <= budget_tokens
-            # Always include the top passage even if it exceeds the budget —
+            # Always include the top passage even if it exceeds the budget -
             # an empty context is never useful.
             is_first = len(selected) == 0
             if fits or is_first:

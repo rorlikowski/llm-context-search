@@ -26,12 +26,12 @@ class TrafilaturaExtractor:
             if doc is None:
                 return ExtractedContent()
             return ExtractedContent(
-                title=doc.title or None,
-                text=doc.text or None,
-                author=doc.author or None,
-                date=doc.date or None,
-                language=doc.language or None,
-                description=doc.description or None,
+                title=getattr(doc, "title", None) or None,
+                text=getattr(doc, "text", None) or None,
+                author=getattr(doc, "author", None) or None,
+                date=getattr(doc, "date", None) or None,
+                language=getattr(doc, "language", None) or None,
+                description=getattr(doc, "description", None) or None,
             )
         except Exception:
             return ExtractedContent()

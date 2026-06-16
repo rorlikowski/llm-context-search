@@ -13,10 +13,9 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from llm_context_search.cache import CachedPageFetcher, CachedSearchProvider
+from llm_context_search._builder import build_engine, make_http_client
 from llm_context_search.config import ContextSearchConfig
 from llm_context_search.engine import ContextSearchEngine
-from llm_context_search.providers.searxng import SearXNGProvider
 
 app = typer.Typer(
     name="llm-context",
@@ -41,9 +40,7 @@ Timeout = Annotated[float, typer.Option("--timeout", help="HTTP request timeout 
 NoCache = Annotated[bool, typer.Option("--no-cache", is_flag=True, help="Disable in-memory TTL cache")]
 AsJson = Annotated[bool, typer.Option("--json", is_flag=True, help="Output raw JSON instead of Rich display")]
 Verbose = Annotated[bool, typer.Option("--verbose", "-v", is_flag=True, help="Show detailed source info")]
-IncludeFailed = Annotated[
-    bool, typer.Option("--include-failed", is_flag=True, help="Include failed sources in output")
-]
+IncludeFailed = Annotated[bool, typer.Option("--include-failed", is_flag=True, help="Include failed sources in output")]
 OutputFile = Annotated[
     Path | None,
     typer.Option("--output", "-o", help="Write output to file instead of (or in addition to) stdout"),
@@ -65,34 +62,18 @@ def _write_output(text: str, output: Path | None, as_json: bool) -> None:
 
 
 def _make_http_client(timeout: float) -> httpx.AsyncClient:
-    """Create a tuned AsyncClient with HTTP/2, keep-alive and granular timeouts."""
-    return httpx.AsyncClient(
-        http2=True,
-        limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
-        timeout=httpx.Timeout(connect=3.0, read=timeout, write=5.0, pool=5.0),
-    )
+    return make_http_client(timeout)
 
 
 def _build_engine(
     searxng_url: str,
-    timeout: float,
+    timeout: float,  # noqa: ARG001 – kept for call-site compat; timeout lives in config
     config: ContextSearchConfig,
     http_client: httpx.AsyncClient,
     *,
     use_cache: bool = True,
 ) -> ContextSearchEngine:
-    provider: object = SearXNGProvider(
-        base_url=searxng_url, http_client=http_client, timeout=config.searxng_timeout_seconds
-    )
-    from llm_context_search.fetch.fetcher import PageFetcher
-
-    fetcher: object = PageFetcher(http_client=http_client, config=config.to_fetch_config())
-
-    if use_cache:
-        provider = CachedSearchProvider(provider, ttl_seconds=config.search_cache_ttl_seconds)
-        fetcher = CachedPageFetcher(fetcher, ttl_seconds=config.fetch_cache_ttl_seconds)
-
-    return ContextSearchEngine(provider=provider, config=config, http_client=http_client, fetcher=fetcher)  # type: ignore[arg-type]
+    return build_engine(searxng_url, config, http_client, use_cache=use_cache)
 
 
 # ---------------------------------------------------------------------------
@@ -189,7 +170,9 @@ def collect(
                 print(payload)
             return
 
-        sources = collection.sources if include_failed else [s for s in collection.sources if s.fetch_status != "skipped"]
+        sources = (
+            collection.sources if include_failed else [s for s in collection.sources if s.fetch_status != "skipped"]
+        )
 
         table = Table(title=f'Sources: "{query}"', show_lines=True)
         table.add_column("Title", style="bold")
@@ -202,7 +185,9 @@ def collect(
 
         for s in sources:
             fetch_style = "green" if s.fetch_status == "ok" else "red"
-            extract_style = "green" if s.extraction_status == "ok" else ("yellow" if s.extraction_status == "empty" else "red")
+            extract_style = (
+                "green" if s.extraction_status == "ok" else ("yellow" if s.extraction_status == "empty" else "red")
+            )
             row = [
                 s.title,
                 f"[{fetch_style}]{s.fetch_status}[/{fetch_style}]",
@@ -279,7 +264,9 @@ def build(
             src_table.add_column("URL", style="cyan")
             for s in bundle.sources:
                 fetch_style = "green" if s.fetch_status == "ok" else "red"
-                extract_style = "green" if s.extraction_status == "ok" else ("yellow" if s.extraction_status == "empty" else "red")
+                extract_style = (
+                    "green" if s.extraction_status == "ok" else ("yellow" if s.extraction_status == "empty" else "red")
+                )
                 src_table.add_row(
                     s.title,
                     f"[{fetch_style}]{s.fetch_status}[/{fetch_style}]",
