@@ -19,4 +19,7 @@ __all__ = [
     "SearchResult",
 ]
 
-__version__ = "0.1.0"
+try:
+    from llm_context_search._version import __version__
+except ImportError:
+    __version__ = "0.0.0+unknown"

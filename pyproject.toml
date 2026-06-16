@@ -1,6 +1,6 @@
 [project]
 name = "llm-context-search"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Fast LLM-free search-to-context engine for AI agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -52,8 +52,14 @@ llm-context = "llm_context_search.cli:app"
 llm-context-mcp = "llm_context_search.mcp_server:main"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/llm_context_search/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/llm_context_search"]
